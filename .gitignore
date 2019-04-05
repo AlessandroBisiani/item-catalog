@@ -1,2 +1,4 @@
 .DS_Store
-notes.db
+__pycache__/
+database_setup.pyc
+alebisiani.db
