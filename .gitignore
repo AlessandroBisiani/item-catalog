@@ -1,4 +1,8 @@
+
+notes.db
+.vagrant/
 .DS_Store
 __pycache__/
 database_setup.pyc
 alebisiani.db
+Vagrantfile
