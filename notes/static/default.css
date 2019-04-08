@@ -64,6 +64,7 @@ body {
     background-color: #fcfcfc;
     font-family: "Lora", "Courier New", Courier, monospace;
     height: 100%;
+    background-color: rgb(255, 164, 38);
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -190,3 +191,54 @@ li{
     list-style: none inside;
     margin-bottom:0.1em;
 }
+
+.header {
+    width: 100vw;
+    height: 5rem;
+    position: fixed;
+    top: 0px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    /* background-color: rgba(255, 66, 157, 0.4); */
+    background-color: rgba(255,124,85, 1.0);
+    /* color: #FF7C55;
+    color: #FFA425; */
+    padding: 1rem 2rem;
+    /* align-content: center; */
+}
+    .header__title {
+        display: flex;
+        margin: 0;
+        font-size: 3rem;
+    }
+    .header__signinbutton {
+        display: flex;
+        /* align-self: center; */
+    }
+
+.nav {
+    grid-area: nav;
+    display: flex;
+    height: 100vh;
+    flex-direction: column;
+}
+
+.notes {
+    grid-area: notes;
+    display: flex;
+    flex-direction: column;
+    /* background-color: rgb(255, 164, 38); */
+}
+
+.main-wrapper {
+    display: grid;
+    width: 100vw;
+    grid-template-columns: 2rem 30% auto 2rem;
+    grid-template-rows: 4rem auto;
+    row-gap: 2em;
+    grid-template-areas:
+        "header header header header"
+        ". nav notes ."
+}
+

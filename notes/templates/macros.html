@@ -1,0 +1,34 @@
+{% macro gSignIn(STATE) %}
+    <button id="signinButton">Google Signin</button>
+    {{STATE}}
+    <div id="result"></div>
+{% endmacro %}
+
+{% macro header() %}
+<div class="header">
+    <h1 class="header__title">Bulletin</h1>
+    <button class="header__signinbutton" id="signinButton">Google Signin</button>
+</div>
+{% endmacro %}
+
+{% macro nav() %}
+<div class="nav">
+    <h2>Categories</h2>
+    <ul>
+        <li>First</li>
+        <li>Second</li>
+        <li>Third</li>
+    </ul>
+</div>
+{% endmacro %}
+
+{% macro notes() %}
+<div class="notes">
+    <h2>Categories</h2>
+    <ul>
+        <li>Note 1</li>
+        <li>Note 2</li>
+        <li>Note 3</li>
+    </ul>
+</div>
+{% endmacro %}
