@@ -14,7 +14,8 @@ Base = declarative_base()
 class User(Base):
     __tablename__ = 'users'
 
-    email = Column(VARCHAR(350), primary_key=True)
+    id = Column(Integer, primary_key=True)
+    email = Column(VARCHAR(350), nullable=False)
     name = Column(String(250), nullable=False)
 
 
@@ -28,13 +29,13 @@ class Note(Base):
     __tablename__ = 'notes'
 
     id = Column(Integer, primary_key=True)
-    category = Column(Integer, ForeignKey('categories.name'))
-    owner = Column(String(250), ForeignKey('users.email'))
+    category_name = Column(Integer, ForeignKey('categories.name'))
+    owner_id = Column(String(250), ForeignKey('users.id'))
     title = Column(String(100), nullable=False)
     body = Column(BLOB())
 
-    category = relationship(Category)  # back_populates='notes')
-    user = relationship(User)  # back_populates='notes')
+    category = relationship(Category)
+    user = relationship(User)
 
 
 # create a database in notes.db and return a connection to it
