@@ -1,68 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    {% from 'macros.html' import page_header, nav, notes, gauth_init, gauth_func %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-    <script src="https://apis.google.com/js/client:platform.js?onload=start" async defer></script>
-    <script>
-        function start() {
-            gapi.load('auth2', function() {
-                auth2 = gapi.auth2.init({
-                    scope: 'openid email profile',
-                    client_id: '427071821532-av5gnmbef611874f58me5at12k4cboua.apps.googleusercontent.com',
-                    redirecturi: "postmessage",
-                    accesstype: "offline",
-                    cookiepolicy: "single_host_origin",
-                    callback: "signInCallback",
-                    approvalprompt: "force"
-                });
-            });
-        }
-    </script>
+    {{ gauth_init() }}
     <link rel="stylesheet" href="{{ url_for('static', filename='default.css') }}">
 </head>
 <body>
     <div class="main-wrapper">
-        {% from 'macros.html' import header, nav, notes %}
 
-        {{ header() }}
-        <!-- {{STATE}} -->
+        {{ page_header() }}
+        <p>
+            {{STATE}}
+        </p>
+        {{ nav() }}
 
-        {{nav()}}
-
-        {{notes()}}
+        {{ notes() }}
     </div>
-    <script>
-        $('#signinButton').click(function() {
-            function signInCallback(authResult){
-                if (authResult['code']){
-                    $('#signinButton').attr('style', 'display: none');
-                    $.ajax({
-                    type: 'POST',
-                    url: '/gconnect?state={{STATE}}',
-                    headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    contentType: 'application/octet-stream; charset=utf-8',
-                    success:function(result){
-                        $('#result').html('Login Successful!</br>'+ result + '</br>Redirecting...')
-                            setTimeout(function() {
-                            window.location.href = "/";
-                            }, 2000);
-                    },
-                    processData:false,
-                    data:authResult['code']
-                    });
-                } else{
-                    // handle error
-                    console.log('There was an error: ' + authResult['error']);
-                    $('#result').html('Failed to make a server-side call. Check your configuration and console.');
-                }
-            }
-            auth2.grantOfflineAccess().then(signInCallback);
-        });
-    </script>
+    {{ gauth_func(STATE) }}
 </body>
 </html>
