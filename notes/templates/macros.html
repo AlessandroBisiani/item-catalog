@@ -1,16 +1,13 @@
-{% macro gSignIn(STATE) %}
-    <button id="signinButton">Google Signin</button>
-    {{STATE}}
-    <div id="result"></div>
-{% endmacro %}
 
 {% macro page_header() %}
 <div class="header">
     <h1 class="header__title">Bulletin</h1>
     <div id="result"></div>
+    {{ STATE }}
     <button class="header__signinbutton" id="signinButton">Google Signin</button>
 </div>
 {% endmacro %}
+
 
 {% macro nav() %}
 <div class="nav">
@@ -23,9 +20,10 @@
 </div>
 {% endmacro %}
 
+
 {% macro notes() %}
 <div class="notes">
-    <h2>Categories</h2>
+    <h2>Notes</h2>
     <ul>
         <li>Note 1</li>
         <li>Note 2</li>
@@ -34,7 +32,8 @@
 </div>
 {% endmacro %}
 
-{% macro gsignin() %}
+
+{% macro gauth_init() %}
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
 <script src="https://apis.google.com/js/client:platform.js?onload=start" async defer></script>
 <script>
@@ -51,5 +50,39 @@
             });
         });
     }
+</script>
+{% endmacro %}
+
+
+{% macro gauth_func(STATE) %}
+<script>
+    $('#signinButton').click(function() {
+        function signInCallback(authResult){
+            if (authResult['code']){
+                $('#signinButton').attr('style', 'display: none');
+                $.ajax({
+                type: 'POST',
+                url: '/gconnect?state={{STATE}}',
+                headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+                },
+                contentType: 'application/octet-stream; charset=utf-8',
+                success:function(result){
+                    $('#result').html('Login Successful!</br>'+ result + '</br>Redirecting...')
+                        setTimeout(function() {
+                        window.location.href = "/";
+                        }, 2000);
+                },
+                processData:false,
+                data:authResult['code']
+                });
+            } else{
+                // handle error
+                console.log('There was an error: ' + authResult['error']);
+                $('#result').html('Failed to make a server-side call. Check your configuration and console.');
+            }
+        }
+        auth2.grantOfflineAccess().then(signInCallback);
+    });
 </script>
 {% endmacro %}
