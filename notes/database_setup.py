@@ -2,7 +2,7 @@
 import os
 import sys
 from sqlalchemy import Column, ForeignKey, Integer, String
-from sqlalchemy.types import VARCHAR, BLOB
+from sqlalchemy.types import VARCHAR
 from sqlalchemy import create_engine
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
@@ -32,7 +32,7 @@ class Note(Base):
     category_name = Column(Integer, ForeignKey('categories.name'))
     owner_id = Column(String(250), ForeignKey('users.id'))
     title = Column(String(100), nullable=False)
-    body = Column(BLOB())
+    body = Column(VARCHAR(10000))
 
     category = relationship(Category)
     user = relationship(User)

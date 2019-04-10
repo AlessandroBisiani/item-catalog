@@ -1,8 +1,18 @@
 
+client_secrets.json
+project.py
+macro_lookup.html
+*.pyc
+instance/
+.pytest_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
 notes.db
 .vagrant/
 .DS_Store
 __pycache__/
-database_setup.pyc
 alebisiani.db
 Vagrantfile
