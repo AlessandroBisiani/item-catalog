@@ -4,7 +4,7 @@
     <div id="result"></div>
 {% endmacro %}
 
-{% macro header() %}
+{% macro page_header() %}
 <div class="header">
     <h1 class="header__title">Bulletin</h1>
     <div id="result"></div>
@@ -32,4 +32,24 @@
         <li>Note 3</li>
     </ul>
 </div>
+{% endmacro %}
+
+{% macro gsignin() %}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://apis.google.com/js/client:platform.js?onload=start" async defer></script>
+<script>
+    function start() {
+        gapi.load('auth2', function() {
+            auth2 = gapi.auth2.init({
+                scope: 'openid email profile',
+                client_id: '427071821532-av5gnmbef611874f58me5at12k4cboua.apps.googleusercontent.com',
+                redirecturi: "postmessage",
+                accesstype: "offline",
+                cookiepolicy: "single_host_origin",
+                callback: "signInCallback",
+                approvalprompt: "force"
+            });
+        });
+    }
+</script>
 {% endmacro %}
