@@ -16,7 +16,7 @@ from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import FlowExchangeError
 
 from database_setup import Base, Note, Category, User
-import requests
+import requests, random
 
 
 app = Flask(__name__)
@@ -28,6 +28,7 @@ APPLICATION_NAME = "Restaurant Menu Application"
 
 google_client_key = ''
 app_secret = ''
+
 
 with open('keys.txt', 'r') as f:
     keys = f.read()
@@ -49,7 +50,7 @@ DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
 
-@app.route('/login/')
+@app.route('/login')
 def showLogin():
     state = ''.join(random.choice(string.ascii_uppercase + string.digits)
                     for x in range(32))
@@ -132,10 +133,10 @@ def gconnect():
     login_session['email'] = data['email']
 
     # See if a user exists, if it doesn't make a new one
-    if getUserID(login_session['email']):
-        login_session['id'] = getUserID(login_session['email'])
+    if get_user_id(login_session['email']):
+        login_session['id'] = get_user_id(login_session['email'])
     else:
-        createUser(login_session)
+        create_user(login_session)
 
     output = ''
     output += '<h2>Welcome, '
@@ -148,7 +149,7 @@ def gconnect():
 
 
 # User Helper Functions
-def createUser(login_session):
+def create_user(login_session):
     newUser = User(name=login_session['name'], email=login_session[
                    'email'])
     session.add(newUser)
@@ -157,12 +158,7 @@ def createUser(login_session):
     return user.id
 
 
-def getUserInfo(user_id):
-    user = session.query(User).filter_by(id=user_id).one()
-    return user
-
-
-def getUserID(email):
+def get_user_id(email):
     try:
         user = session.query(User).filter_by(email=email).one()
         return user.id
@@ -204,39 +200,55 @@ def gdisconnect():
 
 @app.route('/')
 @app.route('/categories')
-def showCategories():
-    return render_template('index.html')
+def show_categories():
+    try:
+        categories = session.query(Category).all()
+        all_notes = session.query(Note).all()
+    except:
+        # TODO
+        pass
+    else:
+        # Choose at most 10 notes at random before passing them to the index page.
+        if len(all_notes) >= 10:
+            random_notes = random.sample(all_notes, 10)
+        else:
+            random_notes = random.sample(all_notes, len(all_notes))
+
+        return render_template('index.html',
+                                categories=categories,
+                                notes=random_notes)
 
 
 @app.route('/categories/<string:category_name>')
-def showNotes(category_name):
-    # return render_template('index.html')
-    return 'showNotes() for {}'.format(category_name)
+def show_notes(category_name):
+    all_notes = session.query(Note).all()
+    return render_template('categoryNotesView.html', all_notes=all_notes)
 
 
 @app.route('/categories/<string:category_name>/notes/<int:id>')
-def showNote(category_name, id):
-    # return render_template('index.html')
-    return 'showNote() for {} with note id: {}'.format(category_name, id)
+def show_note(category_name, id):
+    display_note = session.query(Note).filter_by(id=id).one()
+    # return f'showNote() for {category_name} with note id: {id}'
+    return render_template('noteView.html', note=display_note)
 
 
 @app.route('/categories/<string:category_name>/notes/new')
-def newNote(category_name):
+def new_note(category_name):
     # return render_template('index.html')
-    return 'newNote() in {} category'.format(category_name)
+    return f'newNote() in {category_name} category'
 
 
 @app.route('/categories/<string:category_name>/notes/<int:id>/edit',
            methods=['GET', 'POST'])
-def editNote(category_name, id):
+def edit_note(category_name, id):
     # return render_template('index.html')
-    return 'editNote() for {} with id: {}'.format(category_name, id)
+    return f'editNote() for {category_name} with id: {id}'
 
 
 @app.route('/categories/<string:category_name>/notes/<int:id>/delete')
-def deleteNote(category_name, id):
+def delete_note(category_name, id):
     # return render_template('index.html')
-    return 'deleteNote() for {} with note id: {}'.format(category_name, id)
+    return f'deleteNote() for {category_name} with note id: {id}'
 
 
 if __name__ == '__main__':

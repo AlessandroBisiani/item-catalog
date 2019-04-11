@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+{% from 'macros.html' import page_header, nav, notes, gauth_init, gauth_func %}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login</title>
+{{ gauth_init(client_id) }}
+<link rel="stylesheet" href="{{ url_for('static', filename='default.css') }}">
+</head>
+<body>
+<div class="main-wrapper">
+{{ page_header() }}
+{{ nav() }}
+{{ notes() }}
+</div>
+{{ gauth_func() }}
+</body>
+</html>

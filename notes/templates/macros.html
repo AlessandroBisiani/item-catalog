@@ -1,5 +1,5 @@
 
-{% macro page_header() %}
+{% macro page_header_macro() %}
 <div class="header">
     <h1 class="header__title">Bulletin</h1>
     <div id="result"></div>
@@ -9,26 +9,26 @@
 {% endmacro %}
 
 
-{% macro nav() %}
+{% macro nav_macro(categories) %}
 <div class="nav">
     <h2>Categories</h2>
     <ul>
-        <li>First</li>
-        <li>Second</li>
-        <li>Third</li>
+        {% for cat in categories %}
+        <li><a href="{{ url_for('show_notes', category_name=cat.name) }}">{{cat.name}}</a></li>
+        {% endfor %}
     </ul>
 </div>
 {% endmacro %}
 
 
-{% macro notes() %}
+{% macro notes_macro(notes) %}
 <div class="notes">
     <h2>Notes</h2>
+    {% for note in notes %}
     <ul>
-        <li>Note 1</li>
-        <li>Note 2</li>
-        <li>Note 3</li>
+        <li><a href="{{ url_for('show_note', category_name=note.category_name, id=note.id) }}">{{ note.title }}</a></li>
     </ul>
+    {% endfor %}
 </div>
 {% endmacro %}
 
