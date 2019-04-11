@@ -1,6 +1,6 @@
 #! /usr/bin/env python3.7
 from flask import (
-        Flask, render_template, request, flash, redirect, url_for, jsonify, 
+        Flask, render_template, request, flash, redirect, url_for, jsonify,
         make_response
     )
 from flask import session as login_session
@@ -25,6 +25,20 @@ CLIENT_ID = json.loads(
     open('client_secrets.json', 'r').read())['web']['client_id']
 APPLICATION_NAME = "Restaurant Menu Application"
 
+
+google_client_key = ''
+app_secret = ''
+
+with open('keys.txt', 'r') as f:
+    keys = f.read()
+    for k in keys.split(' '):
+        if k.startswith('client_id'):
+            google_client_key = k.split('=')[-1]
+        elif k.startswith('app_secret'):
+            app_secret = k.split('=')[-1]
+
+
+
 ''' Create the engine, which is the connection source, then using same
 Base (the same orm heirarchy!) as databse_setup, tie the connection supplier
 to the base.'''
@@ -39,10 +53,12 @@ session = DBSession()
 def showLogin():
     state = ''.join(random.choice(string.ascii_uppercase + string.digits)
                     for x in range(32))
+    print(f'app state: {state}')
     # state = hashlib.sha256(os.urandom(1024)).hexdigest()
     login_session['state'] = state
+    print(f'login session state is: {login_session["state"]}')
     # return "The current session state is %s" % login_session['state']
-    return render_template('login.html', STATE=state)
+    return render_template('login.html', STATE=state, client_id=google_client_key)
 
 
 @app.route('/gconnect', methods=['POST'])
@@ -130,9 +146,8 @@ def gconnect():
     print('done!')
     return output
 
+
 # User Helper Functions
-
-
 def createUser(login_session):
     newUser = User(name=login_session['name'], email=login_session[
                    'email'])
@@ -188,43 +203,42 @@ def gdisconnect():
 
 
 @app.route('/')
-@app.route('/categories/')
+@app.route('/categories')
 def showCategories():
-    # return render_template('index.html')
-    return 'Index route'
+    return render_template('index.html')
 
 
-@app.route('/categories/<string:category_name>/')
+@app.route('/categories/<string:category_name>')
 def showNotes(category_name):
     # return render_template('index.html')
     return 'showNotes() for {}'.format(category_name)
 
 
-@app.route('/categories/<string:category_name>/notes/<int:id>/')
+@app.route('/categories/<string:category_name>/notes/<int:id>')
 def showNote(category_name, id):
     # return render_template('index.html')
     return 'showNote() for {} with note id: {}'.format(category_name, id)
 
 
-@app.route('/categories/<string:category_name>/notes/new/')
+@app.route('/categories/<string:category_name>/notes/new')
 def newNote(category_name):
     # return render_template('index.html')
     return 'newNote() in {} category'.format(category_name)
 
 
-@app.route('/categories/<string:category_name>/notes/<int:id>/edit/',
+@app.route('/categories/<string:category_name>/notes/<int:id>/edit',
            methods=['GET', 'POST'])
 def editNote(category_name, id):
     # return render_template('index.html')
     return 'editNote() for {} with id: {}'.format(category_name, id)
 
 
-@app.route('/categories/<string:category_name>/notes/<int:id>/delete/')
+@app.route('/categories/<string:category_name>/notes/<int:id>/delete')
 def deleteNote(category_name, id):
     # return render_template('index.html')
     return 'deleteNote() for {} with note id: {}'.format(category_name, id)
 
 
 if __name__ == '__main__':
-    app.secret_key = 'liseubpeu4no;3a4nga80[32443ifud5y4tu325zexrctouio78om;8n'
+    app.secret_key = app_secret
     app.run(host='0.0.0.0', port=5000, debug=True)

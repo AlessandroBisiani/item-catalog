@@ -33,7 +33,7 @@
 {% endmacro %}
 
 
-{% macro gauth_init() %}
+{% macro gauth_init(client_id) %}
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
 <script src="https://apis.google.com/js/client:platform.js?onload=start" async defer></script>
 <script>
@@ -41,7 +41,7 @@
         gapi.load('auth2', function() {
             auth2 = gapi.auth2.init({
                 scope: 'openid email profile',
-                client_id: '427071821532-av5gnmbef611874f58me5at12k4cboua.apps.googleusercontent.com',
+                client_id: '{{client_id}}',
                 redirecturi: "postmessage",
                 accesstype: "offline",
                 cookiepolicy: "single_host_origin",
