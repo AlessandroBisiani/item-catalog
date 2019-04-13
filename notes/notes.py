@@ -19,6 +19,7 @@ from oauth2client.client import FlowExchangeError
 
 from database_setup import Base, Note, Category, User
 import requests
+import copy
 
 
 app = Flask(__name__)
@@ -50,7 +51,7 @@ session = DBSession()
 
 
 @app.route('/login')
-def showLogin():
+def show_login():
     '''Set the session state, retrieve the current categories, and render
     the login page, passing in the categories and login keys'''
     state = ''.join(random.choice(string.ascii_uppercase + string.digits)
@@ -60,6 +61,7 @@ def showLogin():
     # print(f'login session state is: {login_session["state"]}')
     try:
         categories = session.query(Category).all()
+
     except Exception as e:
         log_error(e)
     else:
@@ -148,6 +150,8 @@ def gconnect():
         create_user(login_session)
         login_session['id'] = get_user_id(login_session['email'])
 
+    assert login_session['id'], 'id not added to session.'
+
     output = ''
     output += '<h2>Welcome, '
     output += login_session['name']
@@ -220,10 +224,11 @@ def show_categories():
     try:
         categories = session.query(Category).all()
         all_notes = session.query(Note).all()
-        if 'access_token' in login_session:
-            user = session.query(User).filter_by(
-                    name=login_session['name']).one()
+
+        user = verify_login()
+        if user:
             user_name = user.name
+
     except Exception as e:
         log_error(e)
     else:
@@ -248,12 +253,13 @@ def show_notes(category_name):
     user_name = 'User'
     try:
         category_notes = session.query(Note).filter_by(
-                    category_name=category_name).all()
+                category_name=category_name).all()
         categories = session.query(Category).all()
-        if 'access_token' in login_session:
-            user = session.query(User).filter_by(
-                    name=login_session['name']).one()
+
+        user = verify_login()
+        if user:
             user_name = user.name
+
     except Exception as e:
         log_error(e)
     else:
@@ -262,39 +268,62 @@ def show_notes(category_name):
                                categories=categories,
                                category_name=category_name,
                                user_name=user_name)
-    return render_template(url_for('pageNotFound'))
+    return redirect(url_for('page_not_found'))
 
 
 @app.route('/categories/<string:category_name>/notes/<int:id>')
 def show_note(category_name, id):
-    try:
-        display_note = session.query(Note).filter_by(id=id).one()
-        categories = session.query(Category).all()
-    except Exception as e:
-        log_error(e)
-    else:
-        if display_note.owner_id == login_session['id']:
-            return render_template('publicNoteView.html',
-                                   note=display_note,
-                                   categories=categories)
-        else:
-            return render_template('noteView.html',
-                                   note=display_note,
-                                   categories=categories)
+    # user_name = 'User'
+    # try:
+    #     display_note = session.query(Note).filter_by(id=id).one()
+    #     categories = session.query(Category).all()
+    #     user = verify_login()
+    #     if user:
+    #         user_name = user.name
+
+    # except Exception as e:
+    #     log_error(e)
+    # else:
+    #     if display_note.owner_id == login_session['id']:
+    #         return render_template('publicNoteView.html',
+    #                                note=display_note,
+    #                                categories=categories)
+    #     else:
+    #         return render_template('noteView.html',
+    #                                note=display_note,
+    #                                categories=categories,
+    #                                user_name=user_name)
+    return redirect(url_for('show_categories'))
 
 
 @app.route('/categories/<string:category_name>/notes/new',
            methods=['GET', 'POST'])
 def new_note(category_name):
-    if 'access_token' not in login_session:
-        return redirect('/login')
-    categories = session.query(Category).all()
+    user_name = 'User'
+    try:
+        categories = session.query(Category).all()
+        user = verify_login()
+        if user:
+            user_name = user.name
+        else:
+            redirect(url_for('show_notes', category_name=category_name))
 
-    if request.method == 'GET':
-        return render_template('newNote.html', categories)
-    if request.method == 'POST':
-        print('-----------------Reached POST at new_note()-------------------')
-        return redirect(url_for('show_categories'))
+    except Exception as e:
+        log_error(e)
+
+    else:
+        if request.method == 'GET':
+            cat_name = copy.copy(category_name)
+            return render_template('newNote.html',
+                                categories=categories,
+                                category_name=cat_name,
+                                user_name=user_name)
+
+        if request.method == 'POST':
+            print('---------------Reached POST at new_note()-----------------')
+            return redirect(url_for('show_categories'))
+
+    return redirect(url_for('page_not_found'))
 
 
 @app.route('/categories/<string:category_name>/notes/<int:id>/edit',
@@ -311,7 +340,7 @@ def edit_note(category_name, id):
             idz = login_session['id']
             print(f'sessionid: {idz} and note owner: {note.owner_id}')
         else:
-            return redirect(url_for('showLogin'))
+            return redirect(url_for('show_login'))
     except Exception as e:
         log_error(e)
     else:
@@ -323,20 +352,25 @@ def edit_note(category_name, id):
         if request.method == 'POST':
             print('-----------------Reached POST at edit_note()--------------')
             return redirect(url_for('show_categories'))
-    return render_template(url_for('pageNotFound'))
+    return redirect(url_for('error'))
 
 @app.route('/categories/<string:category_name>/notes/<int:id>/delete',
            methods=['GET', 'POST'])
 def delete_note(category_name, id):
-    if 'access_token' not in login_session:
-        return redirect('/login')
-    categories = session.query(Category).all()
+    # if 'access_token' not in login_session:
+    #     return redirect('/login')
+    # categories = session.query(Category).all()
 
-    if request.method == 'GET':
-        return render_template('deleteNote.html', categories)
-    if request.method == 'POST':
-        print('-----------------Reached POST at delete_note()----------------')
+    # if request.method == 'GET':
+    #     return render_template('deleteNote.html', categories)
+    # if request.method == 'POST':
+    #     print('-----------------Reached POST at delete_note()----------------')
         return redirect(url_for('show_categories'))
+
+
+@app.route('/error')
+def page_not_found():
+    return render_template('pageNotFound.html')
 
 
 def log_error(error):
@@ -359,6 +393,15 @@ def log_message(response):
     '''
     # TODO: append to a file
     print(response)
+
+
+def verify_login():
+    if 'access_token' in login_session:
+        user = session.query(User).filter_by(
+                name=login_session['name']).one()
+        return user
+    else:
+        return False
 
 
 

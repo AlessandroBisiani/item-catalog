@@ -5,9 +5,9 @@
     {% if user_name != 'User' %}
         <a class="header__signinlink" href="{{ url_for('gdisconnect') }}">Log Out, {{ user_name }}</a>
     <!-- <button class="header__signinbutton" id="signinButton">Google Signin</button> -->
-    {% endif%}
+    {% endif %}
     {% if user_name == 'User' %}
-        <a class="header__signinlink" href="{{ url_for('showLogin') }}">Sign In With Google</a>
+        <a class="header__signinlink" href="{{ url_for('show_login') }}">Sign In With Google</a>
     {% endif%}
 </div>
 {% endmacro %}
@@ -27,12 +27,17 @@
 
 {% macro notes_macro(notes) %}
 <div class="notes">
-    <h2>Notes</h2>
-    {% for note in notes %}
+    <div class="notes__heading">
+        <h2 class="heading">Notes</h2>
+        {% if notes %}
+        <div><a href="{{ url_for('new_note', category_name=notes[0].category_name) }}">Add Note</a></div>
+        {% endif %}
+    </div>
     <ul>
-        <li><a href="{{ url_for('show_note', category_name=note.category_name, id=note.id) }}">{{ note.title }}</a></li>
+        {% for note in notes %}
+            <li><a href="{{ url_for('show_note', category_name=note.category_name, id=note.id) }}">{{ note.title }}</a></li>
+        {% endfor %}
     </ul>
-    {% endfor %}
 </div>
 {% endmacro %}
 
