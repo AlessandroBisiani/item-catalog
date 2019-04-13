@@ -212,9 +212,13 @@ li{
         margin: 0;
         font-size: 3rem;
     }
-    .header__signinbutton {
+    .header__signinlink {
         display: flex;
         /* align-self: center; */
+    }
+    #signinbutton {
+        display: flex;
+        max-width: 15vw;
     }
 
 .nav {
@@ -231,14 +235,19 @@ li{
     /* background-color: rgb(255, 164, 38); */
 }
 
+#result {
+    grid-area: flash;
+}
+
 .main-wrapper {
     display: grid;
     width: 100vw;
     grid-template-columns: 2rem 30% auto 2rem;
-    grid-template-rows: 4rem auto;
+    grid-template-rows: 4rem 3rem auto;
     row-gap: 2em;
     grid-template-areas:
         "header header header header"
+        ". flash flash ."
         ". nav notes ."
 }
 

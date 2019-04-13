@@ -5,19 +5,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
-    {{ gauth_init(client_id) }}
     <link rel="stylesheet" href="{{ url_for('static', filename='default.css') }}">
 </head>
 <body>
     <div class="main-wrapper">
-
-        {{ page_header_macro() }}
-
+        {{ page_header_macro(user_name) }}
+        <div id="result"></div>
         {{ nav_macro(categories) }}
-
         {{ notes_macro(notes) }}
     </div>
-    {{ gauth_func(STATE) }}
 </body>
 </html>
 

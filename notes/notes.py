@@ -6,7 +6,9 @@ from flask import (
 from flask import session as login_session
 
 import httplib2
-import random, string, json
+import random
+import string
+import json
 
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
@@ -16,7 +18,7 @@ from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import FlowExchangeError
 
 from database_setup import Base, Note, Category, User
-import requests, random
+import requests
 
 
 app = Flask(__name__)
@@ -25,10 +27,8 @@ CLIENT_ID = json.loads(
     open('client_secrets.json', 'r').read())['web']['client_id']
 APPLICATION_NAME = "Restaurant Menu Application"
 
-
 google_client_key = ''
 app_secret = ''
-
 
 with open('keys.txt', 'r') as f:
     keys = f.read()
@@ -37,7 +37,6 @@ with open('keys.txt', 'r') as f:
             google_client_key = k.split('=')[-1]
         elif k.startswith('app_secret'):
             app_secret = k.split('=')[-1]
-
 
 
 ''' Create the engine, which is the connection source, then using same
@@ -52,14 +51,22 @@ session = DBSession()
 
 @app.route('/login')
 def showLogin():
+    '''Set the session state, retrieve the current categories, and render
+    the login page, passing in the categories and login keys'''
     state = ''.join(random.choice(string.ascii_uppercase + string.digits)
                     for x in range(32))
-    print(f'app state: {state}')
-    # state = hashlib.sha256(os.urandom(1024)).hexdigest()
+    # print(f'app state: {state}')
     login_session['state'] = state
-    print(f'login session state is: {login_session["state"]}')
-    # return "The current session state is %s" % login_session['state']
-    return render_template('login.html', STATE=state, client_id=google_client_key)
+    # print(f'login session state is: {login_session["state"]}')
+    try:
+        categories = session.query(Category).all()
+    except Exception as e:
+        log_error(e)
+    else:
+        return render_template('login.html',
+                               categories=categories,
+                               STATE=state,
+                               client_id=google_client_key)
 
 
 @app.route('/gconnect', methods=['POST'])
@@ -85,7 +92,8 @@ def gconnect():
 
     # Check that the access token is valid.
     access_token = credentials.access_token
-    url = f'https://www.googleapis.com/oauth2/v1/tokeninfo?access_token={access_token}'
+    url = f'''https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=\
+{access_token}'''
     h = httplib2.Http()
     result = json.loads(h.request(url, 'GET')[1])
     # If there was an error in the access token info, abort.
@@ -113,7 +121,8 @@ def gconnect():
     stored_access_token = login_session.get('access_token')
     stored_gplus_id = login_session.get('gplus_id')
     if stored_access_token is not None and gplus_id == stored_gplus_id:
-        response = make_response(json.dumps('Current user is already connected.'),
+        response = make_response(json.dumps(
+                                 'Current user is already connected.'),
                                  200)
         response.headers['Content-Type'] = 'application/json'
         return response
@@ -158,15 +167,20 @@ def create_user(login_session):
     return user.id
 
 
+def get_user_info(user_id):
+    user = session.query(User).filter_by(id=user_id).one()
+    return user
+
+
 def get_user_id(email):
     try:
         user = session.query(User).filter_by(email=email).one()
         return user.id
-    except:
-        return None
+    except Exception as e:
+        log_error(e)
 
 
-# DISCONNECT - Revoke a current user's token and reset their login_session
+# DISCONNECT - Revoke a current user's token and reset the login_session
 @app.route('/gdisconnect')
 def gdisconnect():
     # Only disconnect a connected user.
@@ -186,10 +200,11 @@ def gdisconnect():
         del login_session['gplus_id']
         del login_session['name']
         del login_session['email']
+        del login_session['id']
 
-        response = make_response(json.dumps('Successfully disconnected.'), 200)
-        response.headers['Content-Type'] = 'application/json'
-        return response
+        # response = make_response(json.dumps('Successfully disconnected.'), 200)
+        # response.headers['Content-Type'] = 'application/json'
+        return redirect(url_for('show_categories'))
     else:
         # For whatever reason, the given token was invalid.
         response = make_response(
@@ -199,56 +214,128 @@ def gdisconnect():
 
 
 @app.route('/')
-@app.route('/categories')
 def show_categories():
+    user_name = 'User'
     try:
         categories = session.query(Category).all()
         all_notes = session.query(Note).all()
-    except:
-        # TODO
-        pass
+        if 'access_token' in login_session:
+            user = session.query(User).filter_by(name=login_session['name']).one()
+            user_name = user.name
+    except Exception as e:
+        log_error(e)
     else:
-        # Choose at most 10 notes at random before passing them to the index page.
+        '''
+        Choose at most 10 notes at random before passing them to the
+        index page
+        '''
         if len(all_notes) >= 10:
             random_notes = random.sample(all_notes, 10)
         else:
             random_notes = random.sample(all_notes, len(all_notes))
-
+        display_notes = random_notes
+    finally:
         return render_template('index.html',
                                 categories=categories,
-                                notes=random_notes)
+                                notes=display_notes,
+                                user_name=user_name)
 
 
 @app.route('/categories/<string:category_name>')
 def show_notes(category_name):
-    all_notes = session.query(Note).all()
-    return render_template('categoryNotesView.html', all_notes=all_notes)
+    try:
+        category_notes = session.query(Note).filter_by(
+                    category_name=category_name).all()
+        categories = session.query(Category).all()
+    except Exception as e:
+        log_error(e)
+    else:
+        return render_template('categoryNotesView.html',
+                               notes=category_notes,
+                               categories=categories)
 
 
 @app.route('/categories/<string:category_name>/notes/<int:id>')
 def show_note(category_name, id):
-    display_note = session.query(Note).filter_by(id=id).one()
-    # return f'showNote() for {category_name} with note id: {id}'
-    return render_template('noteView.html', note=display_note)
+    try:
+        display_note = session.query(Note).filter_by(id=id).one()
+        categories = session.query(Category).all()
+    except Exception as e:
+        log_error(e)
+    else:
+        if display_note.owner_id == login_session['id']:
+            return render_template('publicNoteView.html',
+                                   note=display_note,
+                                   categories=categories)
+        else:
+            return render_template('noteView.html',
+                                   note=display_note,
+                                   categories=categories)
 
 
-@app.route('/categories/<string:category_name>/notes/new')
+@app.route('/categories/<string:category_name>/notes/new',
+           methods=['GET', 'POST'])
 def new_note(category_name):
-    # return render_template('index.html')
-    return f'newNote() in {category_name} category'
+    if 'access_token' not in login_session:
+        return redirect('/login')
+    categories = session.query(Category).all()
+
+    if request.method == 'GET':
+        return render_template('newNote.html', categories)
+    if request.method == 'POST':
+        print('-----------------Reached POST at new_note()-------------------')
+        return redirect(url_for('show_categories'))
 
 
 @app.route('/categories/<string:category_name>/notes/<int:id>/edit',
            methods=['GET', 'POST'])
 def edit_note(category_name, id):
-    # return render_template('index.html')
-    return f'editNote() for {category_name} with id: {id}'
+    if 'access_token' not in login_session:
+        return redirect('/login')
+    categories = session.query(Category).all()
+
+    if request.method == 'GET':
+        return render_template('editNote.html', categories)
+    if request.method == 'POST':
+        print('-----------------Reached POST at edit_note()------------------')
+        return redirect(url_for('show_categories'))
 
 
-@app.route('/categories/<string:category_name>/notes/<int:id>/delete')
+@app.route('/categories/<string:category_name>/notes/<int:id>/delete',
+           methods=['GET', 'POST'])
 def delete_note(category_name, id):
-    # return render_template('index.html')
-    return f'deleteNote() for {category_name} with note id: {id}'
+    if 'access_token' not in login_session:
+        return redirect('/login')
+    categories = session.query(Category).all()
+
+    if request.method == 'GET':
+        return render_template('deleteNote.html', categories)
+    if request.method == 'POST':
+        print('-----------------Reached POST at delete_note()----------------')
+        return redirect(url_for('show_categories'))
+
+
+def log_error(error):
+    '''Handle error responses that should be logged
+
+    Arguments:
+        error {str} -- The exception or error response __repr__
+    '''
+
+    # TODO: append to a file
+    print(error)
+
+
+def log_message(response):
+    '''Handle non-error responses that should be logged.
+
+    Arguments:
+        response {str} -- A description of app functionality that should be 
+        logged
+    '''
+    # TODO: append to a file
+    print(response)
+
 
 
 if __name__ == '__main__':
