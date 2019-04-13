@@ -146,6 +146,7 @@ def gconnect():
         login_session['id'] = get_user_id(login_session['email'])
     else:
         create_user(login_session)
+        login_session['id'] = get_user_id(login_session['email'])
 
     output = ''
     output += '<h2>Welcome, '
@@ -220,7 +221,8 @@ def show_categories():
         categories = session.query(Category).all()
         all_notes = session.query(Note).all()
         if 'access_token' in login_session:
-            user = session.query(User).filter_by(name=login_session['name']).one()
+            user = session.query(User).filter_by(
+                    name=login_session['name']).one()
             user_name = user.name
     except Exception as e:
         log_error(e)
@@ -234,25 +236,33 @@ def show_categories():
         else:
             random_notes = random.sample(all_notes, len(all_notes))
         display_notes = random_notes
-    finally:
         return render_template('index.html',
                                 categories=categories,
                                 notes=display_notes,
                                 user_name=user_name)
+    return render_template('pageNotFound.html')
 
 
 @app.route('/categories/<string:category_name>')
 def show_notes(category_name):
+    user_name = 'User'
     try:
         category_notes = session.query(Note).filter_by(
                     category_name=category_name).all()
         categories = session.query(Category).all()
+        if 'access_token' in login_session:
+            user = session.query(User).filter_by(
+                    name=login_session['name']).one()
+            user_name = user.name
     except Exception as e:
         log_error(e)
     else:
         return render_template('categoryNotesView.html',
                                notes=category_notes,
-                               categories=categories)
+                               categories=categories,
+                               category_name=category_name,
+                               user_name=user_name)
+    return render_template(url_for('pageNotFound'))
 
 
 @app.route('/categories/<string:category_name>/notes/<int:id>')
@@ -290,16 +300,30 @@ def new_note(category_name):
 @app.route('/categories/<string:category_name>/notes/<int:id>/edit',
            methods=['GET', 'POST'])
 def edit_note(category_name, id):
-    if 'access_token' not in login_session:
-        return redirect('/login')
-    categories = session.query(Category).all()
-
-    if request.method == 'GET':
-        return render_template('editNote.html', categories)
-    if request.method == 'POST':
-        print('-----------------Reached POST at edit_note()------------------')
-        return redirect(url_for('show_categories'))
-
+    try:
+        if 'id' in login_session:
+            note = session.query(Note).filter_by(id=id).one()
+            if login_session['id'] != note.owner_id:
+                flash('You don\'t own this note and cannot edit it.')
+                print('You don\'t own this note and cannot edit it.')
+                return redirect(url_for('showCategories'))
+            categories = session.query(Category).all()
+            idz = login_session['id']
+            print(f'sessionid: {idz} and note owner: {note.owner_id}')
+        else:
+            return redirect(url_for('showLogin'))
+    except Exception as e:
+        log_error(e)
+    else:
+        if request.method == 'GET':
+            print('-----------------Reached GET at edit_note()--------------')
+            return render_template('editNote.html',
+                                   categories=categories,
+                                   note=note)
+        if request.method == 'POST':
+            print('-----------------Reached POST at edit_note()--------------')
+            return redirect(url_for('show_categories'))
+    return render_template(url_for('pageNotFound'))
 
 @app.route('/categories/<string:category_name>/notes/<int:id>/delete',
            methods=['GET', 'POST'])
@@ -330,7 +354,7 @@ def log_message(response):
     '''Handle non-error responses that should be logged.
 
     Arguments:
-        response {str} -- A description of app functionality that should be 
+        response {str} -- A description of app functionality that should be
         logged
     '''
     # TODO: append to a file
