@@ -30,7 +30,7 @@ class Note(Base):
 
     id = Column(Integer, primary_key=True)
     category_name = Column(Integer, ForeignKey('categories.name'))
-    owner_id = Column(String(250), ForeignKey('users.id'))
+    owner_id = Column(Integer, ForeignKey('users.id'))
     title = Column(String(100), nullable=False)
     body = Column(VARCHAR(10000))
 
