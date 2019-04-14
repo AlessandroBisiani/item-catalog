@@ -276,8 +276,6 @@ def show_notes(category_name):
         if user:
             user_name = user.name
 
-        session.close()
-
     except Exception as e:
         session.close()
         log_error(e)
@@ -287,33 +285,34 @@ def show_notes(category_name):
                                categories=categories,
                                category_name=category_name,
                                user_name=user_name)
+    finally:
+        session.close()
     return redirect(url_for('page_not_found'))
 
 
-# TODO
 @app.route('/categories/<string:category_name>/notes/<int:id>')
 def show_note(category_name, id):
-    # user_name = 'User'
-    # try:
-    #     display_note = session.query(Note).filter_by(id=id).one()
-    #     categories = session.query(Category).all()
-    #     user = verify_login(session)
-    #     if user:
-    #         user_name = user.name
+    try:
+        session = DBSession()
+        user = verify_login(session)
+        if user:
+            categories = session.query(Category).all()
+            note = session.query(Note).filter_by(id=id).one()
+            return render_template('noteView.html',
+                            note=note,
+                            categories=categories,
+                            user_name=user.name)
+        else:
+            return redirect(url_for('show_login'))
 
-    # except Exception as e:
-    #     log_error(e)
-    # else:
-    #     if display_note.owner_id == login_session['id']:
-    #         return render_template('publicNoteView.html',
-    #                                note=display_note,
-    #                                categories=categories)
-    #     else:
-    #         return render_template('noteView.html',
-    #                                note=display_note,
-    #                                categories=categories,
-    #                                user_name=user_name)
-    return redirect(url_for('show_categories'))
+    except Exception as e:
+        log_error(e)
+        # return redirect(url_for('page_not_found'))
+        raise
+    finally:
+        session.close()
+
+    return redirect(url_for('page_not_found'))
 
 
 @app.route('/categories/<string:category_name>/notes/new',
@@ -415,6 +414,7 @@ def delete_note(category_name, id):
             return redirect(url_for('show_login'))
     except Exception as e:
         log_error(e)
+        # return redirect(url_for('page_not_found'))
         raise
     else:
         return redirect(url_for('show_notes', category_name=category_name))

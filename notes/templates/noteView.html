@@ -1,22 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-{% from 'macros.html' import page_header, nav, notes, gauth_init, gauth_func %}
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Login</title>
-{{ gauth_init(client_id) }}
-<link rel="stylesheet" href="{{ url_for('static', filename='default.css') }}">
+    {% from 'macros.html' import page_header_macro, nav_macro, notes_macro %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='default.css') }}">
 </head>
 <body>
-<div class="main-wrapper">
-{{ page_header() }}
-{{ nav() }}
-<div class="notes">
-    <h2>NOTE VIEW TEMPLATE</h2>
-</div>
-
-</div>
-{{ gauth_func() }}
+    <div class="main-wrapper">
+        {{ page_header_macro(user_name) }}
+        <div id="result">Note View Template</div>
+        {{ nav_macro(categories) }}
+        <div class="notes">
+            <h2>{{ note.title }}</h2>
+            <p>{{ note.body }}</p>
+        </div>
+    </div>
 </body>
 </html>
