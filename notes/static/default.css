@@ -224,7 +224,7 @@ li{
 .nav {
     grid-area: nav;
     display: flex;
-    height: 100vh;
+    height: auto;
     flex-direction: column;
 }
 
@@ -235,19 +235,27 @@ li{
     /* background-color: rgb(255, 164, 38); */
 }
 
+.notes__heading {
+    display: flex;
+}
+
+.heading{
+    margin: 0 1.5rem 4px 0;
+}
+
 #result {
     grid-area: flash;
 }
 
 .main-wrapper {
     display: grid;
-    width: 100vw;
+    width: 98vw;
     grid-template-columns: 2rem 30% auto 2rem;
-    grid-template-rows: 4rem 3rem auto;
+    grid-template-rows: 4rem 3rem auto 4rem;
     row-gap: 2em;
     grid-template-areas:
-        "header header header header"
-        ". flash flash ."
-        ". nav notes ."
+        "header header  header  header"
+        ".      flash   flash   ."
+        ".      nav     notes   ."
+        ".      .       .       ."
 }
-
