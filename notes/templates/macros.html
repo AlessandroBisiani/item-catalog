@@ -25,17 +25,15 @@
 {% endmacro %}
 
 
-{% macro notes_macro(notes) %}
+{% macro notes_macro(notes, category) %}
 <div class="notes">
     <div class="notes__heading">
         <h2 class="heading">Notes</h2>
-        {% if notes %}
-        <div><a href="{{ url_for('new_note', category_name=notes[0].category_name) }}">Add Note</a></div>
-        {% endif %}
+        <div><a href="{{ url_for('new_note', category_name=category) }}">Add Note</a></div>
     </div>
     <ul>
         {% for note in notes %}
-            <li><a href="{{ url_for('show_note', category_name=note.category_name, id=note.id) }}">{{ note.title }}</a></li>
+            <li><a href="{{ url_for('show_note', category_name=category, id=note.id) }}">{{ note.title }}</a></li>
         {% endfor %}
     </ul>
 </div>

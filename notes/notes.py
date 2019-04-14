@@ -45,10 +45,9 @@ Base (the same orm heirarchy!) as databse_setup, tie the connection supplier
 to the base.'''
 engine = create_engine('sqlite:///notes.db')
 Base.metadata.bind = engine
-
 DBSession = sessionmaker(bind=engine)
-session = DBSession()
 
+# session = DBSession()
 
 @app.route('/login')
 def show_login():
@@ -59,16 +58,19 @@ def show_login():
     # print(f'app state: {state}')
     login_session['state'] = state
     # print(f'login session state is: {login_session["state"]}')
-    try:
-        categories = session.query(Category).all()
 
+    try:
+        session = DBSession()
+        categories = session.query(Category).all()
+        session.close()
     except Exception as e:
+        session.close()
         log_error(e)
     else:
         return render_template('login.html',
-                               categories=categories,
-                               STATE=state,
-                               client_id=google_client_key)
+                            categories=categories,
+                            STATE=state,
+                            client_id=google_client_key)
 
 
 @app.route('/gconnect', methods=['POST'])
@@ -164,24 +166,31 @@ def gconnect():
 
 # User Helper Functions
 def create_user(login_session):
+    session = DBSession()
     newUser = User(name=login_session['name'], email=login_session[
                    'email'])
     session.add(newUser)
     session.commit()
     user = session.query(User).filter_by(email=login_session['email']).one()
+    session.close()
     return user.id
 
 
 def get_user_info(user_id):
+    session = DBSession()
     user = session.query(User).filter_by(id=user_id).one()
+    session.close()
     return user
 
 
 def get_user_id(email):
     try:
+        session = DBSession()
         user = session.query(User).filter_by(email=email).one()
+        session.close()
         return user.id
     except Exception as e:
+        session.close()
         log_error(e)
 
 
@@ -207,8 +216,8 @@ def gdisconnect():
         del login_session['email']
         del login_session['id']
 
-        # response = make_response(json.dumps('Successfully disconnected.'), 200)
-        # response.headers['Content-Type'] = 'application/json'
+    # response = make_response(json.dumps('Successfully disconnected.'), 200)
+    # response.headers['Content-Type'] = 'application/json'
         return redirect(url_for('show_categories'))
     else:
         # For whatever reason, the given token was invalid.
@@ -221,16 +230,20 @@ def gdisconnect():
 @app.route('/')
 def show_categories():
     user_name = 'User'
+    session = DBSession()
     try:
         categories = session.query(Category).all()
         all_notes = session.query(Note).all()
 
-        user = verify_login()
+        user = verify_login(session)
         if user:
             user_name = user.name
+        session.close()
 
     except Exception as e:
+        session.close()
         log_error(e)
+        raise
     else:
         '''
         Choose at most 10 notes at random before passing them to the
@@ -240,27 +253,33 @@ def show_categories():
             random_notes = random.sample(all_notes, 10)
         else:
             random_notes = random.sample(all_notes, len(all_notes))
+
         display_notes = random_notes
         return render_template('index.html',
-                                categories=categories,
-                                notes=display_notes,
-                                user_name=user_name)
+                               categories=categories,
+                               notes=display_notes,
+                               user_name=user_name)
+
     return render_template('pageNotFound.html')
 
 
 @app.route('/categories/<string:category_name>')
 def show_notes(category_name):
     user_name = 'User'
+    session = DBSession()
     try:
         category_notes = session.query(Note).filter_by(
                 category_name=category_name).all()
         categories = session.query(Category).all()
 
-        user = verify_login()
+        user = verify_login(session)
         if user:
             user_name = user.name
 
+        session.close()
+
     except Exception as e:
+        session.close()
         log_error(e)
     else:
         return render_template('categoryNotesView.html',
@@ -271,13 +290,14 @@ def show_notes(category_name):
     return redirect(url_for('page_not_found'))
 
 
+# TODO
 @app.route('/categories/<string:category_name>/notes/<int:id>')
 def show_note(category_name, id):
     # user_name = 'User'
     # try:
     #     display_note = session.query(Note).filter_by(id=id).one()
     #     categories = session.query(Category).all()
-    #     user = verify_login()
+    #     user = verify_login(session)
     #     if user:
     #         user_name = user.name
 
@@ -300,32 +320,54 @@ def show_note(category_name, id):
            methods=['GET', 'POST'])
 def new_note(category_name):
     user_name = 'User'
+    session = DBSession()
+    # try getting relevant information from database and verify log in status.
     try:
         categories = session.query(Category).all()
-        user = verify_login()
+        user = verify_login(session)
+        session.close()
+
         if user:
             user_name = user.name
+
         else:
-            redirect(url_for('show_notes', category_name=category_name))
+            flash('Please Log In.')
+            return redirect(url_for('show_notes', category_name=category_name))
 
     except Exception as e:
+        session.close()
         log_error(e)
 
+    # If data exists and a used is logged in, handle GET and POST requests
     else:
         if request.method == 'GET':
-            cat_name = copy.copy(category_name)
             return render_template('newNote.html',
-                                categories=categories,
-                                category_name=cat_name,
-                                user_name=user_name)
+                                   categories=categories,
+                                   category_name=category_name,
+                                   user_name=user_name)
 
         if request.method == 'POST':
             print('---------------Reached POST at new_note()-----------------')
-            return redirect(url_for('show_categories'))
+            newNote = Note(category_name=category_name,
+                           owner_id=login_session['id'],
+                           title=request.form['title'],
+                           body=request.form['body'])
+            print(f'note added: {newNote.category_name}{newNote.owner_id}{newNote.title}{newNote.body}')
+            try:
+                session.add(newNote)
+                session.commit()
+                session.close()
+            except Exception as e:
+                session.close()
+                log_error(e)
+            else:
+                return redirect(url_for('show_notes',
+                                category_name=category_name))
 
     return redirect(url_for('page_not_found'))
 
 
+# TODO
 @app.route('/categories/<string:category_name>/notes/<int:id>/edit',
            methods=['GET', 'POST'])
 def edit_note(category_name, id):
@@ -354,6 +396,8 @@ def edit_note(category_name, id):
             return redirect(url_for('show_categories'))
     return redirect(url_for('error'))
 
+
+# TODO
 @app.route('/categories/<string:category_name>/notes/<int:id>/delete',
            methods=['GET', 'POST'])
 def delete_note(category_name, id):
@@ -364,8 +408,8 @@ def delete_note(category_name, id):
     # if request.method == 'GET':
     #     return render_template('deleteNote.html', categories)
     # if request.method == 'POST':
-    #     print('-----------------Reached POST at delete_note()----------------')
-        return redirect(url_for('show_categories'))
+    #     print('---------------Reached POST at delete_note()--------------')
+    return redirect(url_for('show_categories'))
 
 
 @app.route('/error')
@@ -395,14 +439,13 @@ def log_message(response):
     print(response)
 
 
-def verify_login():
+def verify_login(session):
     if 'access_token' in login_session:
         user = session.query(User).filter_by(
                 name=login_session['name']).one()
         return user
     else:
         return False
-
 
 
 if __name__ == '__main__':
