@@ -47,7 +47,6 @@ engine = create_engine('sqlite:///notes.db')
 Base.metadata.bind = engine
 DBSession = sessionmaker(bind=engine)
 
-# session = DBSession()
 
 @app.route('/login')
 def show_login():
@@ -68,9 +67,9 @@ def show_login():
         log_error(e)
     else:
         return render_template('login.html',
-                            categories=categories,
-                            STATE=state,
-                            client_id=google_client_key)
+                               categories=categories,
+                               STATE=state,
+                               client_id=google_client_key)
 
 
 @app.route('/gconnect', methods=['POST'])
@@ -299,9 +298,9 @@ def show_note(category_name, id):
             categories = session.query(Category).all()
             note = session.query(Note).filter_by(id=id).one()
             return render_template('noteView.html',
-                            note=note,
-                            categories=categories,
-                            user_name=user.name)
+                                   note=note,
+                                   categories=categories,
+                                   user_name=user.name)
         else:
             return redirect(url_for('show_login'))
 
@@ -350,7 +349,6 @@ def new_note(category_name):
                            owner_id=login_session['id'],
                            title=request.form['title'],
                            body=request.form['body'])
-            print(f'note added: {newNote.category_name}{newNote.owner_id}{newNote.title}{newNote.body}')
             try:
                 session.add(newNote)
                 session.commit()
@@ -428,15 +426,15 @@ def delete_note(category_name, id):
                 if note_del.owner_id == user.id:
                     session.delete(note_del)
                     session.commit()
-                    flash(f'{note_del.title} was deleted from {category_name}.')
+                    flash(f'{note_del.title} was deleted from {category_name}')
                 else:
                     return redirect(url_for('page_not_found'))
             elif request.method == 'GET':
                 categories = session.query(Category).all()
                 return render_template('deleteNote.html',
-                                    note=note_del,
-                                    categories=categories,
-                                    user_name=user.name)
+                                       note=note_del,
+                                       categories=categories,
+                                       user_name=user.name)
 
         else:
             return redirect(url_for('show_login'))
