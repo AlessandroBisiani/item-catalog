@@ -370,32 +370,51 @@ def new_note(category_name):
            methods=['GET', 'POST'])
 def edit_note(category_name, id):
     try:
-        if 'id' in login_session:
-            note = session.query(Note).filter_by(id=id).one()
-            if login_session['id'] != note.owner_id:
-                flash('You don\'t own this note and cannot edit it.')
-                print('You don\'t own this note and cannot edit it.')
-                return redirect(url_for('showCategories'))
+        session = DBSession()
+        user = verify_login(session)
+        if user:
             categories = session.query(Category).all()
-            idz = login_session['id']
-            print(f'sessionid: {idz} and note owner: {note.owner_id}')
+            note = session.query(Note).filter_by(id=id).one()
+
+            if request.method == 'POST':
+                if note.owner_id == user.id:
+                    if request.form['body'] and request.form['title']:
+                        note.title = request.form['title']
+                        note.body = request.form['body']
+                        session.add(note)
+                        session.commit()
+                    else:
+                        flash('Invalid Request. Try again.')
+                else:
+                    return redirect(url_for('show_notes',
+                                            category_name=category_name))
+            elif request.method == 'GET':
+                if note.owner_id == user.id:
+                    return render_template('editNote.html',
+                                           categories=categories,
+                                           user_name=user.name,
+                                           note=note)
+                else:
+                    return redirect(url_for('show_notes',
+                                            category_name=category_name))
+
         else:
             return redirect(url_for('show_login'))
+
     except Exception as e:
         log_error(e)
+        # return redirect(url_for('page_note_found'))
+        raise
     else:
-        if request.method == 'GET':
-            print('-----------------Reached GET at edit_note()--------------')
-            return render_template('editNote.html',
-                                   categories=categories,
-                                   note=note)
-        if request.method == 'POST':
-            print('-----------------Reached POST at edit_note()--------------')
-            return redirect(url_for('show_categories'))
-    return redirect(url_for('error'))
+        return redirect(url_for('show_note',
+                                category_name=category_name,
+                                id=id))
+    finally:
+        session.close()
+
+    return redirect(url_for('page_not_found'))
 
 
-# TODO
 @app.route('/categories/<string:category_name>/notes/<int:id>/delete',
            methods=['GET', 'POST'])
 def delete_note(category_name, id):
