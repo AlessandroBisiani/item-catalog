@@ -346,7 +346,6 @@ def new_note(category_name):
                                    user_name=user_name)
 
         if request.method == 'POST':
-            print('---------------Reached POST at new_note()-----------------')
             newNote = Note(category_name=category_name,
                            owner_id=login_session['id'],
                            title=request.form['title'],
@@ -398,37 +397,42 @@ def edit_note(category_name, id):
 
 # TODO
 @app.route('/categories/<string:category_name>/notes/<int:id>/delete',
-           methods=['POST'])
+           methods=['GET', 'POST'])
 def delete_note(category_name, id):
     try:
         session = DBSession()
         user = verify_login(session)
         if user:
             note_del = session.query(Note).filter_by(id=id).one()
-            if note_del.owner_id == user.id:
-                session.delete(note_del)
-                flash(f'{note_del.title} was deleted from {category_name}.')
-            else:
-                return redirect(url_for('page_not_found'))
+
+            if request.method == 'POST':
+                if note_del.owner_id == user.id:
+                    session.delete(note_del)
+                    session.commit()
+                    flash(f'{note_del.title} was deleted from {category_name}.')
+                else:
+                    return redirect(url_for('page_not_found'))
+            elif request.method == 'GET':
+                categories = session.query(Category).all()
+                return render_template('deleteNote.html',
+                                    note=note_del,
+                                    categories=categories,
+                                    user_name=user.name)
+
         else:
             return redirect(url_for('show_login'))
+
     except Exception as e:
         log_error(e)
+        # TODO
         # return redirect(url_for('page_not_found'))
         raise
     else:
+        print('Should have worked.')
         return redirect(url_for('show_notes', category_name=category_name))
     finally:
         session.close()
 
-    # if 'access_token' not in login_session:
-    #     return redirect('/login')
-    # categories = session.query(Category).all()
-
-    # if request.method == 'GET':
-    #     return render_template('deleteNote.html', categories)
-    # if request.method == 'POST':
-    #     print('---------------Reached POST at delete_note()--------------')
     return redirect(url_for('show_categories'))
 
 

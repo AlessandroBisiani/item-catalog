@@ -10,10 +10,14 @@
 <body>
     <div class="main-wrapper">
         {{ page_header_macro(user_name) }}
-        <div id="result">Note View Template</div>
+        <div id="result"></div>
         {{ nav_macro(categories) }}
         <div class="notes">
-            <h2>{{ note.title }}</h2>
+            <div class="heading">
+                <h2>{{ note.title }}</h2>
+                <a href="{{ url_for('edit_note', category_name=note.category_name, id=note.id) }}">edit</a>
+                <a href="{{ url_for('delete_note', category_name=note.category_name, id=note.id) }}">delete</a>
+            </div>
             <p>{{ note.body }}</p>
         </div>
     </div>

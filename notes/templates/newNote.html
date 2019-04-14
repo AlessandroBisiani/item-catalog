@@ -15,7 +15,7 @@
 
         <div class="notes">
             <h2>Add A Note To {{ category_name }}</h2>
-            <form action="{{ url_for('new_note', category_name=category_name) }}" method="POST" id="new_post">
+            <form action="{{ url_for('new_note', category_name=category_name) }}" method="POST">
                 <p>Title</p>
                 <input type="text" cols="40" name="title">
                 <p>Body</p>
