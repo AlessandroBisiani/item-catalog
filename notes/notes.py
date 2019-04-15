@@ -199,7 +199,6 @@ def gdisconnect():
         return response
 
 
-
 def create_user(login_session):
     session = DBSession()
     newUser = User(name=login_session['name'], email=login_session[
@@ -228,6 +227,44 @@ def get_user_id(email):
         session.close()
         log_error(e)
 
+
+@app.route('/notes/JSON')
+def func_name():
+    '''Return all notes in JSON format
+
+    Returns:
+        JSON -- note
+                id,
+                category_name,
+                owner_id,
+                title,
+                body
+    '''
+    try:
+        session = DBSession()
+        notes = session.query(Note).all()
+        return jsonify(notes=[note.serialize for note in notes])
+    except Exception as e:
+        log_error(e)
+        # return redirect(url_for('page_not_found'))
+        raise
+
+
+@app.route('/categories/JSON')
+def show_categores_json():
+    '''Return all categories, in JSON format
+
+    Returns:
+        JSON -- category names
+    '''
+    try:
+        session = DBSession()
+        categories = session.query(Category).all()
+        return jsonify(categories=[cat.serialize for cat in categories])
+    except Exception as e:
+        log_error(e)
+        # return redirect(url_for('page_not_found'))
+        raise
 
 @app.route('/')
 def show_categories():

@@ -25,8 +25,15 @@ class Category(Base):
     @property
     def serialize(self):
         return {
-            name: self.name
+            'name': self.name
         }
+
+    # @property
+    # def serialize_parent(self, child):
+    #     return {
+    #         'name': self.name,
+    #         'child': child
+    #     }
 
 
 class Note(Base):
@@ -44,11 +51,11 @@ class Note(Base):
     @property
     def serialize(self):
         return {
-            id:             self.id,
-            category_name:  self.category_name,
-            owner_id:       self.owner_id,
-            title:          self.title,
-            body:           self.body
+            'id':             self.id,
+            'category_name':  self.category_name,
+            'owner_id':       self.owner_id,
+            'title':          self.title,
+            'body':           self.body
         }
 
 
