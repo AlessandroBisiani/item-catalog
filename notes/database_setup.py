@@ -1,6 +1,4 @@
 #! /usr/bin/env python3
-import os
-import sys
 from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.types import VARCHAR
 from sqlalchemy import create_engine
@@ -24,6 +22,12 @@ class Category(Base):
 
     name = Column(String(100), primary_key=True)
 
+    @property
+    def serialize(self):
+        return {
+            name: self.name
+        }
+
 
 class Note(Base):
     __tablename__ = 'notes'
@@ -36,6 +40,16 @@ class Note(Base):
 
     category = relationship(Category)
     user = relationship(User)
+
+    @property
+    def serialize(self):
+        return {
+            id:             self.id,
+            category_name:  self.category_name,
+            owner_id:       self.owner_id,
+            title:          self.title,
+            body:           self.body
+        }
 
 
 # create a database in notes.db and return a connection to it
