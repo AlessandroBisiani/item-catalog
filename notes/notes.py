@@ -156,10 +156,7 @@ def gconnect():
 
     assert login_session['id'], 'id not added to session.'
 
-    output = ''
-    output += '<h2>Welcome, '
-    output += login_session['name']
-    output += '!</h2>'
+    output = login_session['name']
     name = login_session['name']
     flash(f'Hi, {name} you are now logged in.')
     print('done!')
@@ -268,7 +265,7 @@ def show_categores_json():
 
 @app.route('/')
 def show_categories():
-    user_name = 'User'
+    user_name = 'Guest'
     session = DBSession()
     try:
         categories = session.query(Category).all()
@@ -313,7 +310,7 @@ def show_notes(category_name):
         Response Object -- categoryNotesView.html
     '''
 
-    user_name = 'User'
+    user_name = 'Guest'
     session = DBSession()
     try:
         category_notes = session.query(Note).filter_by(
@@ -353,15 +350,15 @@ def show_note(category_name, id):
     try:
         session = DBSession()
         user = verify_login(session)
+        categories = session.query(Category).all()
+        note = session.query(Note).filter_by(id=id).one()
+        user_name = 'Guest'
         if user:
-            categories = session.query(Category).all()
-            note = session.query(Note).filter_by(id=id).one()
-            return render_template('noteView.html',
-                                   note=note,
-                                   categories=categories,
-                                   user_name=user.name)
-        else:
-            return redirect(url_for('show_login'))
+            user_name = user.name
+        return render_template('noteView.html',
+                                note=note,
+                                categories=categories,
+                                user_name=user_name)
 
     except Exception as e:
         log_error(e)
@@ -384,7 +381,7 @@ def new_note(category_name):
     Returns:
         On GET: Response object -- A response with the appropriate page
     '''
-    user_name = 'User'
+    user_name = 'Guest'
     session = DBSession()
     # try getting relevant information from database and verify log in status.
     try:

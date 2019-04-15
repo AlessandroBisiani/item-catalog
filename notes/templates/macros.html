@@ -1,12 +1,12 @@
 
 {% macro page_header_macro(user_name) %}
 <div class="header">
-    <h1 class="header__title">Bulletin</h1>
-    {% if user_name != 'User' %}
+    <h1 class="header__title"><a href="/">Bulletin</a></h1>
+    {% if user_name != 'Guest' %}
         <a class="header__signinlink" href="{{ url_for('gdisconnect') }}">Log Out, {{ user_name }}</a>
     <!-- <button class="header__signinbutton" id="signinButton">Google Signin</button> -->
     {% endif %}
-    {% if user_name == 'User' %}
+    {% if user_name == 'Guest' %}
         <a class="header__signinlink" href="{{ url_for('show_login') }}">Sign In With Google</a>
     {% endif%}
 </div>
