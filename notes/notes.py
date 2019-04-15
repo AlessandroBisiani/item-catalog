@@ -19,7 +19,6 @@ from oauth2client.client import FlowExchangeError
 
 from database_setup import Base, Note, Category, User
 import requests
-import copy
 
 
 app = Flask(__name__)
@@ -50,8 +49,12 @@ DBSession = sessionmaker(bind=engine)
 
 @app.route('/login')
 def show_login():
-    '''Set the session state, retrieve the current categories, and render
-    the login page, passing in the categories and login keys'''
+    '''Set the session state and render the login page
+
+    Returns:
+        Response object -- with login.html
+    '''
+
     state = ''.join(random.choice(string.ascii_uppercase + string.digits)
                     for x in range(32))
     # print(f'app state: {state}')
@@ -163,36 +166,6 @@ def gconnect():
     return output
 
 
-# User Helper Functions
-def create_user(login_session):
-    session = DBSession()
-    newUser = User(name=login_session['name'], email=login_session[
-                   'email'])
-    session.add(newUser)
-    session.commit()
-    user = session.query(User).filter_by(email=login_session['email']).one()
-    session.close()
-    return user.id
-
-
-def get_user_info(user_id):
-    session = DBSession()
-    user = session.query(User).filter_by(id=user_id).one()
-    session.close()
-    return user
-
-
-def get_user_id(email):
-    try:
-        session = DBSession()
-        user = session.query(User).filter_by(email=email).one()
-        session.close()
-        return user.id
-    except Exception as e:
-        session.close()
-        log_error(e)
-
-
 # DISCONNECT - Revoke a current user's token and reset the login_session
 @app.route('/gdisconnect')
 def gdisconnect():
@@ -224,6 +197,36 @@ def gdisconnect():
             json.dumps('Failed to revoke token for given user.'), 400)
         response.headers['Content-Type'] = 'application/json'
         return response
+
+
+
+def create_user(login_session):
+    session = DBSession()
+    newUser = User(name=login_session['name'], email=login_session[
+                   'email'])
+    session.add(newUser)
+    session.commit()
+    user = session.query(User).filter_by(email=login_session['email']).one()
+    session.close()
+    return user.id
+
+
+def get_user_info(user_id):
+    session = DBSession()
+    user = session.query(User).filter_by(id=user_id).one()
+    session.close()
+    return user
+
+
+def get_user_id(email):
+    try:
+        session = DBSession()
+        user = session.query(User).filter_by(email=email).one()
+        session.close()
+        return user.id
+    except Exception as e:
+        session.close()
+        log_error(e)
 
 
 @app.route('/')
@@ -264,6 +267,15 @@ def show_categories():
 
 @app.route('/categories/<string:category_name>')
 def show_notes(category_name):
+    '''Render notes display template for a category
+
+    Arguments:
+        category_name {str} -- category specified in the url
+
+    Returns:
+        Response Object -- categoryNotesView.html
+    '''
+
     user_name = 'User'
     session = DBSession()
     try:
@@ -291,6 +303,16 @@ def show_notes(category_name):
 
 @app.route('/categories/<string:category_name>/notes/<int:id>')
 def show_note(category_name, id):
+    '''Render template for the single-note view page
+
+    Arguments:
+        category_name {str} -- category name from the url
+        id {int} -- note id from the url
+
+    Returns:
+        Response object -- noteView.html
+    '''
+
     try:
         session = DBSession()
         user = verify_login(session)
@@ -317,6 +339,14 @@ def show_note(category_name, id):
 @app.route('/categories/<string:category_name>/notes/new',
            methods=['GET', 'POST'])
 def new_note(category_name):
+    '''Handle GET and POST for note creation
+
+    Arguments:
+        category_name {str} -- category add the note to, from the url
+
+    Returns:
+        On GET: Response object -- A response with the appropriate page
+    '''
     user_name = 'User'
     session = DBSession()
     # try getting relevant information from database and verify log in status.
@@ -363,10 +393,19 @@ def new_note(category_name):
     return redirect(url_for('page_not_found'))
 
 
-# TODO
 @app.route('/categories/<string:category_name>/notes/<int:id>/edit',
            methods=['GET', 'POST'])
 def edit_note(category_name, id):
+    '''Handle GET and POST for note editing
+
+    Arguments:
+        category_name {str} -- category of the note to edit, from the url
+        id {int} -- id of the not to edit, from the url
+
+    Returns:
+        Response object -- A response with the appropriate page
+    '''
+
     try:
         session = DBSession()
         user = verify_login(session)
@@ -416,6 +455,16 @@ def edit_note(category_name, id):
 @app.route('/categories/<string:category_name>/notes/<int:id>/delete',
            methods=['GET', 'POST'])
 def delete_note(category_name, id):
+    '''Handle note deletion GE and POST requests
+
+    Arguments:
+        category_name {str} -- category of the note to delete, from the url
+        id {int} -- id of the note to delete
+
+    Returns:
+        Response object -- A response with the appropriate page
+    '''
+
     try:
         session = DBSession()
         user = verify_login(session)
@@ -455,6 +504,11 @@ def delete_note(category_name, id):
 
 @app.route('/error')
 def page_not_found():
+    '''Render a catch-all error page
+
+    Returns:
+        Response object -- A response containing the generic error page
+    '''
     return render_template('pageNotFound.html')
 
 
@@ -481,6 +535,15 @@ def log_message(response):
 
 
 def verify_login(session):
+    '''Helper function to return the user logged in, if present
+
+    Arguments:
+        session {DBSession} -- DBSession object created in the calling scope
+
+    Returns:
+        User -- The user logged in to the session, or false
+    '''
+
     if 'access_token' in login_session:
         user = session.query(User).filter_by(
                 name=login_session['name']).one()
