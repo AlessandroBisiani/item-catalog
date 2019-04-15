@@ -58,6 +58,11 @@ class Note(Base):
             'body':           self.body
         }
 
+# class Catalog(Base):
+
+#     __init__(self, category_name,):
+#         category_name
+
 
 # create a database in notes.db and return a connection to it
 engine = create_engine('sqlite:///notes.db')

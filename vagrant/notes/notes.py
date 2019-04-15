@@ -225,8 +225,32 @@ def get_user_id(email):
         log_error(e)
 
 
+@app.route('/notesbycategory/JSON')
+def notes_by_category_json():
+    try:
+        session = DBSession()
+        catalog = {}
+        # Nested dict builder Get 'note' data, assign it to catalo under 'category'
+        for category in session.query(Category).all():
+            catalog[category.name] = []
+            notes = session.query(
+                    Note).filter_by(category_name=category.name).all()
+            for note in notes:
+                # print(type(note.serialize))
+                catalog[category.name].append(note.serialize)
+
+        return jsonify(catalog)
+    except Exception as e:
+        log_error(e)
+        # return redirect(url_for('page_not_found'))
+        raise
+    finally:
+        session.close()
+    return redirect(url_for('page_not_found'))
+
+
 @app.route('/notes/JSON')
-def func_name():
+def show_notes_json():
     '''Return all notes in JSON format
 
     Returns:
