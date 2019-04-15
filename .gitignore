@@ -16,4 +16,3 @@ notes.db
 .DS_Store
 __pycache__/
 alebisiani.db
-Vagrantfile
