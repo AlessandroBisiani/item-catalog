@@ -227,6 +227,12 @@ def get_user_id(email):
 
 @app.route('/notesbycategory/JSON')
 def notes_by_category_json():
+    '''
+    Return all notes data divided by category, as JSON
+
+    Returns:
+        JSON -- All notes data saved in the database
+    '''
     try:
         session = DBSession()
         catalog = {}
