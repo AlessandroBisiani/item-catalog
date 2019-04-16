@@ -25,11 +25,6 @@ Download and install Vagrant, Virtual Box 5.1, and fork the application repo:
 <br><br>
 
 
-## Verify Python 3.7 and pip are installed correctly
-
-<br><br>
-
-
 ## Install Python 3.7 on your VM
 Perform this step if executing `python3.7` does not start the Python 3.7 interpreter.
 
@@ -56,7 +51,7 @@ Move into the extracted directory and execute in order:
 
 
 ## Install Project Dependencies, Including pip for Python 3.7
-Ensure that python 3.7 is installed (see above). From /vagrant/ in your vm execute the following:
+If you installed Python 3.7 from the above, you shouldn't need to reinstall pip for it. If not, you can do so by executin the following from /vagrant/ in your vm:
 
 <br>
 
@@ -88,7 +83,7 @@ Dependencies:
 ## Set Up The Database
 Run database_setup.py and notes_data.py
 
-`python3.7 database_setup.py && notes_data.py`
+`python3.7 database_setup.py && notes_data.py commit`
 
 <br><br>
 
