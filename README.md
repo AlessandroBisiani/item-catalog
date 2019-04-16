@@ -83,7 +83,7 @@ Dependencies:
 ## Set Up The Database
 Run database_setup.py and notes_data.py
 
-`python3.7 database_setup.py && notes_data.py commit`
+`python3.7 database_setup.py && python3.7 notes_data.py commit`
 
 <br><br>
 
