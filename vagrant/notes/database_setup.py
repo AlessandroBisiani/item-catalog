@@ -1,4 +1,4 @@
-#! /usr/bin/env python3
+#!/usr/bin/env python3
 from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.types import VARCHAR
 from sqlalchemy import create_engine
@@ -22,18 +22,13 @@ class Category(Base):
 
     name = Column(String(100), primary_key=True)
 
+    notes = relationship("Note", cascade='all, delete-orphan')
+
     @property
     def serialize(self):
         return {
             'name': self.name
         }
-
-    # @property
-    # def serialize_parent(self, child):
-    #     return {
-    #         'name': self.name,
-    #         'child': child
-    #     }
 
 
 class Note(Base):
@@ -45,9 +40,6 @@ class Note(Base):
     title = Column(String(100), nullable=False)
     body = Column(VARCHAR(10000))
 
-    category = relationship(Category)
-    user = relationship(User)
-
     @property
     def serialize(self):
         return {
@@ -57,11 +49,6 @@ class Note(Base):
             'title':          self.title,
             'body':           self.body
         }
-
-# class Catalog(Base):
-
-#     __init__(self, category_name,):
-#         category_name
 
 
 # create a database in notes.db and return a connection to it

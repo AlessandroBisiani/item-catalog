@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.7
+#!/usr/bin/env python3
 from flask import (
         Flask, render_template, request, flash, redirect, url_for, jsonify,
         make_response
@@ -236,7 +236,8 @@ def notes_by_category_json():
     try:
         session = DBSession()
         catalog = {}
-        # Nested dict builder Get 'note' data, assign it to catalo under 'category'
+        # Nested dict builder Get 'note' data, assign it to catalo under
+        # 'category'
         for category in session.query(Category).all():
             catalog[category.name] = []
             notes = session.query(
@@ -252,6 +253,23 @@ def notes_by_category_json():
         raise
     finally:
         session.close()
+    return redirect(url_for('page_not_found'))
+
+
+@app.route('/note/<int:note_id>/JSON')
+def show_note_json(note_id):
+    try:
+        session = DBSession()
+        note = session.query(Note).filter_by(id=note_id).one()
+        if note:
+            return jsonify(note.serialize)
+    except Exception as e:
+        log_error(e)
+        raise
+        redirect(url_for('show_categories'))
+    finally:
+        session.close()
+
     return redirect(url_for('page_not_found'))
 
 
@@ -292,6 +310,7 @@ def show_categores_json():
         log_error(e)
         # return redirect(url_for('page_not_found'))
         raise
+
 
 @app.route('/')
 def show_categories():
@@ -386,9 +405,9 @@ def show_note(category_name, id):
         if user:
             user_name = user.name
         return render_template('noteView.html',
-                                note=note,
-                                categories=categories,
-                                user_name=user_name)
+                               note=note,
+                               categories=categories,
+                               user_name=user_name)
 
     except Exception as e:
         log_error(e)

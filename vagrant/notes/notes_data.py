@@ -1,8 +1,8 @@
-#!/usr/src/env python3.7
+#!/usr/src/env python3
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from database_setup import Base, User, Category, Note
+from database_setup import Base, Category, Note
 
 from sys import argv
 
@@ -25,19 +25,27 @@ notes = [
             'category_name': 'Questions',
             'owner_id': 1,
             'title': 'html5: Inserting and retrieving formatted text',
-            'body': '''Hey, i\'m trying to add a <textarea> on my website for users to insert their notes which would get saved to a database and could be retrieved with new lines and things like bold and italics.&#13;&#10Is thatdoable?&#13;&#10Anysuggestions or overview info will be most welcome, thankyou.'''
+            'body': '''Hey, i\'m trying to add a <textarea> on my website \
+            for users to insert their notes which would get saved to a \
+            database and could be retrieved with new lines and things like \
+            bold and italics.&#13;&#10Is thatdoable?&#13;&#10Anysuggestions \
+            or overview info will be most welcome, thankyou.'''
         },
         {
             'category_name': 'Programming',
             'owner_id': 1,
             'title': 'python3.7: New fstrings are dope',
-            'body': '''I just read the article on realpython.com. Oh, the quality of this life!'''
+            'body': '''I just read the article on realpython.com. Oh, the \
+            quality of this life!'''
         },
         {
             'category_name': 'Reference Guides',
             'owner_id': 1,
             'title': 'Python Tutorials And Guides',
-            'body': '''* http://book.pythontips.com/en/latest/index.html&#13;&#10* https://realpython.com/&#13;&#10* https://google.github.io/styleguide/pyguide.html&#13;&#10* https://pymotw.com/3/'''
+            'body': '''* http://book.pythontips.com/en/latest/index.html \
+            &#13;&#10* https://realpython.com/&#13;&#10* \
+            https://google.github.io/styleguide/pyguide.html&#13;&#10* \
+            https://pymotw.com/3/'''
         }
     ]
 

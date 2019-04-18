@@ -16,9 +16,9 @@
             <h2>Editing {{ note.title }}</h2>
             <form action="{{ url_for('edit_note', category_name=note.category_name, id=note.id) }}" method="POST">
                 <p>Title:</p>
-                <input type="text" name="title" size="60" value="{{ note.title }}">
+                <input type="text" name="title" size="60" value="{{ note.title }}" required>
                 <p>Post Body:</p>
-                <textarea name="body" cols="70" rows="26">{{ note.body }}</textarea>
+                <textarea name="body" cols="70" rows="26" required>{{ note.body }}</textarea>
                 <br>
                 <input type="submit" value="Submit Changes">
             </form>
