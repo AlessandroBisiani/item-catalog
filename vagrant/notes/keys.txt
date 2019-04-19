@@ -1,1 +1,0 @@
-client_id=427071821532-av5gnmbef611874f58me5at12k4cboua.apps.googleusercontent.com app_secret=08ap4hgilun3n2f7oybilun;nvgaviiuybv0
